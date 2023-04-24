@@ -77,6 +77,7 @@ module Fluent::Plugin
     # the openssl s_client -partial_chain flag and X509_V_FLAG_PARTIAL_CHAIN
     config_param :ssl_partial_chain, :bool, default: false
     config_param :skip_labels, :bool, default: false
+    config_param :included_labels, :string, default: nil
     config_param :skip_container_metadata, :bool, default: false
     config_param :skip_master_url, :bool, default: false
     config_param :skip_namespace_metadata, :bool, default: false
@@ -198,7 +199,11 @@ module Fluent::Plugin
       @namespace_cache = LruRedux::TTL::ThreadSafeCache.new(@cache_size, @cache_ttl)
 
       @tag_to_kubernetes_name_regexp_compiled = Regexp.compile(@tag_to_kubernetes_name_regexp)
-      
+
+      if @included_labels
+        @included_labels = @included_labels.split(',').map(&:strip)
+      end
+
       # Use Kubernetes default service account if we're in a pod.
       if @kubernetes_url.nil?
         log.debug 'Kubernetes URL is not set - inspecting environ'

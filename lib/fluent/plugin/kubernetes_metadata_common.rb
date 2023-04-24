@@ -40,7 +40,7 @@ module KubernetesMetadata
 
     def parse_namespace_metadata(namespace_object)
       labels = ''
-      labels = syms_to_strs(namespace_object[:metadata][:labels].to_h) unless @skip_labels
+      labels = parse_labels(syms_to_strs(namespace_object[:metadata][:labels].to_h)) unless @skip_labels
 
       annotations = match_annotations(syms_to_strs(namespace_object[:metadata][:annotations].to_h))
 
@@ -55,7 +55,7 @@ module KubernetesMetadata
 
     def parse_pod_metadata(pod_object)
       labels = ''
-      labels = syms_to_strs(pod_object[:metadata][:labels].to_h) unless @skip_labels
+      labels = parse_labels(syms_to_strs(pod_object[:metadata][:labels].to_h)) unless @skip_labels
 
       annotations = match_annotations(syms_to_strs(pod_object[:metadata][:annotations].to_h))
 
@@ -94,6 +94,20 @@ module KubernetesMetadata
       kubernetes_metadata['labels'] = labels unless labels.empty?
       kubernetes_metadata['master_url'] = @kubernetes_url unless @skip_master_url
       kubernetes_metadata
+    end
+
+    def parse_labels(labels)
+      if @included_labels
+        res = {}
+        @included_labels.each { |v|
+          if labels.key?(v)
+            res[v] = labels[v]
+          end
+        }
+        res
+      else
+        labels
+      end
     end
 
     def syms_to_strs(hsh)
